@@ -17,8 +17,9 @@ def update_requirements_file(path, odoo_version, verbose=False):
         addons, others, missing = [], [], []
         for line in file.readlines():
             if verbose:
-                print("-" * 80)
-                print(f"Processing line: {line}")
+                sys.stdout.write("\n")
+                sys.stdout.write("-" * 80 + "\n")
+                sys.stdout.write(f"Processing line: {line}")
 
             line = line.strip()
             if not line or line.startswith("#"):
@@ -31,8 +32,8 @@ def update_requirements_file(path, odoo_version, verbose=False):
             addon = PyPIOdooAddon(line, odoo_version)
             if addon.target_addon_version and addon.target_name:
                 if verbose:
-                    print("Found addon for target version: ")
-                    print(f"Addon: {addon.target_name}=={addon.target_addon_version}")
+                    sys.stdout.write("Found addon for target version:\n")
+                    sys.stdout.write(f"Addon: {addon.target_name}=={addon.target_addon_version}")
                 addons.append(addon.target_name + "==" + addon.target_addon_version)
             else:
                 missing.append(line)
@@ -40,25 +41,26 @@ def update_requirements_file(path, odoo_version, verbose=False):
     return addons, others, missing
 
 
-def write_requirements_file(dir, odoo_version, addons, others):
+def write_requirements_file(dir, base_filename, addons, others):
     """
     Write the new requirements content to the requirements file.
     """
-    path = os.path.join(dir, f"requirements-{odoo_version}.txt")
+    path = os.path.join(dir, base_filename)
     requirements = others + addons
     with open(path, "w") as file:
         for requirement in requirements:
             file.write(requirement + "\n")
 
 
-def write_missing_file(dir, odoo_version, missing):
+def write_missing_file(dir, base_filename, missing):
     """
     Write the missing addons to a file.
     """
-    path = os.path.join(dir, f"missing-requirements-{odoo_version}.txt")
-    with open(path + "_missing.txt" , "w") as file:
+    path = os.path.join(dir, f"missing-{base_filename}")
+    with open(path, "w") as file:
         for miss in missing:
             file.write(miss + "\n")
+
 
 def write_output(dir, odoo_version, addons, others, missing):
     """
@@ -67,8 +69,11 @@ def write_output(dir, odoo_version, addons, others, missing):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    write_requirements_file(dir, odoo_version, addons, others)
-    write_missing_file(dir, odoo_version, missing)
+    base_filename = f"requirements-{odoo_version}.txt"
+
+    write_requirements_file(dir, base_filename, addons, others)
+    write_missing_file(dir, base_filename, missing)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -95,19 +100,20 @@ def main():
         raise ValueError("Odoo version must be major. E.g. 14.0 or 14")
 
     if args.verbose:
-        print(f"Updating requirements file: {file_path}")
-        print(f"Target Odoo version: {odoo_version}")
+        sys.stdout.write(f"Updating requirements file: {file_path}")
+        sys.stdout.write(f"Target Odoo version: {odoo_version}")
 
     addons, others, missing = update_requirements_file(
         file_path, odoo_version, args.verbose
     )
-    
+
     if args.verbose:
-        print("Writing new requirements file...")
+        sys.stdout.write("Writing new requirements file... \n")
     write_output(OUTPUT_DIR, odoo_version, addons, others, missing)
-    
+
     if args.verbose:
-        print("Done!")
+        sys.stdout.write("Done!")
+
 
 if __name__ == "__main__":
     main()
