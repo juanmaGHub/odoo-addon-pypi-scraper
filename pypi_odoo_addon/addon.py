@@ -14,8 +14,8 @@ class PyPIOdooAddon:
         self.name = name
         self.odoo_version = odoo_version
         self.target_name = self._get_odoo_addon_target_name(name)
-        self.pypi_scraper = PyPIScraper()
-        self.target_project_url = self._get_odoo_addon_target_project()
+        self.pypi_scraper = PyPIScraper(odoo_version)
+        self.target_project_path = self._get_odoo_addon_target_project()
         self.target_addon_version = self._get_odoo_addon_target_version()
 
     def _get_odoo_addon_target_name(self, name):
@@ -36,13 +36,17 @@ class PyPIOdooAddon:
         if not self.target_name:
             return None
 
-        project_url = self.pypi_scraper.pypi_request(True, self.target_name)
-        return project_url
+        project_path = self.pypi_scraper.pypi_request("search", value=self.target_name)
+        return project_path.strip("/") if project_path else None
 
     def _get_odoo_addon_target_version(self):
-        if not self.target_project_url:
+        if not self.target_project_path:
             return None
-        
-        target_version = self.pypi_scraper.pypi_request(False, self.target_project_url)
+        fragment = ""
+        if self.odoo_version > PREFIX_CHANGES_AT_VERSION:
+            fragment = "#history"
+
+        target_version = self.pypi_scraper.pypi_request(
+            self.target_project_path, fragment=fragment
+        )
         return target_version
-        
