@@ -44,7 +44,7 @@ class PyPIOdooAddon:
             return None
         fragment = ""
         if self.odoo_version > PREFIX_CHANGES_AT_VERSION:
-            fragment = "#history"
+            fragment = "history"
 
         target_version = self.pypi_scraper.pypi_request(
             self.target_project_path, fragment=fragment
