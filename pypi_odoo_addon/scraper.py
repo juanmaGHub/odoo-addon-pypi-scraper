@@ -77,7 +77,7 @@ class PyPIScraper:
 
         for li in search_results.find_all("li"):
             match = li.find("a", {"class": "package-snippet"})["href"]
-            if value in match:
+            if value == match.strip("/").split("/")[-1]:
                 return match
         return None
 
