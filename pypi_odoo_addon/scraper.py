@@ -8,7 +8,7 @@ PYPI_URL = "https://pypi.org"
 PYPI_SEARCH_PATH = "search"
 PYPI_ODOO_FRAMWORK = "Framework :: Odoo"
 
-MAX_PAGE = 5
+MAX_PAGE = 9
 
 
 class PyPIScraper:
