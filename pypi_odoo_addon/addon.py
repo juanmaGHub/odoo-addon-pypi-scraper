@@ -1,6 +1,6 @@
 import re
 
-from .scraper import PyPIScraper
+from .pypi_api_json import PyPIJSON
 
 
 PREFIX_CHANGES_AT_VERSION = 14
@@ -14,8 +14,6 @@ class PyPIOdooAddon:
         self.name = name
         self.odoo_version = odoo_version
         self.target_name = self._get_odoo_addon_target_name(name)
-        self.pypi_scraper = PyPIScraper(odoo_version)
-        self.target_project_path = self._get_odoo_addon_target_project()
         self.target_addon_version = self._get_odoo_addon_target_version()
 
     def _get_odoo_addon_target_name(self, name):
@@ -32,21 +30,16 @@ class PyPIOdooAddon:
 
         return f"odoo-addon-{name}"
 
-    def _get_odoo_addon_target_project(self):
-        if not self.target_name:
-            return None
-
-        project_path = self.pypi_scraper.pypi_request("search", value=self.target_name)
-        return project_path.strip("/") if project_path else None
-
     def _get_odoo_addon_target_version(self):
-        if not self.target_project_path:
-            return None
-        fragment = ""
-        if self.odoo_version > PREFIX_CHANGES_AT_VERSION:
-            fragment = "history"
-
-        target_version = self.pypi_scraper.pypi_request(
-            self.target_project_path, fragment=fragment
-        )
-        return target_version
+        """
+        Get the latest version of the target Odoo addon
+        """
+        data = PyPIJSON.get_package_data(self.target_name)
+        data = PyPIJSON.parse_package_data(data)
+        str_odoo_version = str(self.odoo_version) + ".0"
+        if str_odoo_version in data.get("latest_version", ""):
+            return data.get("latest_version", None)
+        for release in data.get("releases", []):
+            if str_odoo_version in release:
+                return release
+        return None
